@@ -6,14 +6,15 @@ MPU6050 mpu;
 void setup() {
   Serial.begin(115200);
 
-  // Initialize I2C on default pins (SDA & SCL)
+  // Initialize I2C with custom pins
   Wire.begin(26, 25);  // SDA = GPIO 26, SCL = GPIO 25
 
   Serial.println("Initializing MPU6050...");
 
-  if (!mpu.begin(MPU6050_ADDRESS_AD0_LOW)) {  // AD0 connected to GND
-    Serial.println("MPU6050 not found!");
-    while (1);
+  // MPU6050_ADDRESS_AD0_HIGH = 0x69 (AD0 not connected to GND)
+  if (!mpu.begin(MPU6050_ADDRESS_AD0_HIGH)) {
+    Serial.println("MPU6050 not found! Check wiring or address.");
+    while (1); // Stop here
   }
   Serial.println("MPU6050 Connected!");
 }
@@ -37,3 +38,4 @@ void loop() {
 
   delay(1000);
 }
+
