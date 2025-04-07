@@ -1,48 +1,39 @@
-# https://github.com/varnicm/mpu6050-interface/blob/main/mpu6050_script.py
-# TODO: modify this example script
+#include <Wire.h>
+#include <MPU6050.h>
 
-import smbus
-import time
+MPU6050 mpu;
 
-# Class for interfacing with the MPU6050
-class MPU6050:
-    def __init__(self):
-        self.bus = smbus.SMBus(1)  # or SMBus(0) on older Raspberry Pi's
-        self.device_address = 0x68  # MPU6050 device address
+void setup() {
+  Serial.begin(115200);
 
-        # Wake up the MPU6050 as it starts in sleep mode
-        self.bus.write_byte_data(self.device_address, 0x6B, 0)
+  // Initialize I2C on default pins (SDA & SCL)
+  Wire.begin(26, 25);  // SDA = GPIO 26, SCL = GPIO 25
 
-    def read_raw_data(self, addr):
-        # Read raw 16-bit value
-        high = self.bus.read_byte_data(self.device_address, addr)
-        low = self.bus.read_byte_data(self.device_address, addr + 1)
+  Serial.println("Initializing MPU6050...");
 
-        # Concatenate higher and lower value
-        value = ((high << 8) | low)
+  if (!mpu.begin(MPU6050_ADDRESS_AD0_LOW)) {  // AD0 connected to GND
+    Serial.println("MPU6050 not found!");
+    while (1);
+  }
+  Serial.println("MPU6050 Connected!");
+}
 
-        # To get signed value from mpu6050
-        if value > 32768:
-            value = value - 65536
-        return value
+void loop() {
+  mpu.update();
 
-    def get_accel_data(self):
-        # Read accelerometer data
-        acc_x = self.read_raw_data(0x3B)
-        acc_y = self.read_raw_data(0x3D)
-        acc_z = self.read_raw_data(0x3F)
+  Serial.print("Accelerometer: ");
+  Serial.print(mpu.getAccX());
+  Serial.print(", ");
+  Serial.print(mpu.getAccY());
+  Serial.print(", ");
+  Serial.println(mpu.getAccZ());
 
-        return {'x': acc_x, 'y': acc_y, 'z': acc_z}
+  Serial.print("Gyroscope: ");
+  Serial.print(mpu.getGyroX());
+  Serial.print(", ");
+  Serial.print(mpu.getGyroY());
+  Serial.print(", ");
+  Serial.println(mpu.getGyroZ());
 
-# Create MPU6050 instance
-mpu = MPU6050()
-
-# Loop to continuously get data
-try:
-    while True:
-        accel_data = mpu.get_accel_data()
-        print(f"Accel Data: X:{accel_data['x']}, Y:{accel_data['y']}, Z:{accel_data['z']}")
-        time.sleep(1)  # Delay of 1 second
-
-except KeyboardInterrupt:
-    print("Interrupted by user")
+  delay(1000);
+}
